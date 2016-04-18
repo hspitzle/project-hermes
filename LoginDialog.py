@@ -3,7 +3,7 @@ from PyQt4.QtGui import *
 
 from User import *
 
-form_class = uic.loadUiType("login.ui")[0]                 # Load the UI
+form_class = uic.loadUiType("assets/ui/login.ui")[0]                 # Load the UI
 
 
 class LoginDialog(QDialog, form_class):
@@ -31,6 +31,44 @@ class LoginDialog(QDialog, form_class):
         S_password = str(self.s_passEdit.text())
         SOUNDCLOUD_CLIENT_ID = str(self.s_clientEdit.text())
         SOUNDCLOUD_CLIENT_SECRET_ID = str(self.s_secretEdit.text())
+
+        # wrtie info
+        # f = open('user.tmp', 'w')
+        # f.write(username + "\n")
+        # f.write(G_username + "\n")
+        # f.write(G_password + "\n")
+        # f.write(S_username + "\n")
+        # f.write(S_password + "\n")
+        # f.write(SOUNDCLOUD_CLIENT_ID + "\n")
+        # f.write(SOUNDCLOUD_CLIENT_SECRET_ID + "\n")
+
+        # read info
+        f = open('user.tmp', 'r')
+        username = f.readline()[:-1]
+        G_username = f.readline()[:-1]
+        G_password = f.readline()[:-1]
+        S_username = f.readline()[:-1]
+        S_password = f.readline()[:-1]
+        SOUNDCLOUD_CLIENT_ID = f.readline()[:-1]
+        SOUNDCLOUD_CLIENT_SECRET_ID = f.readline()[:-1]
+
+        # testing
+        # print username
+        # print G_username
+        # print G_password
+        # print S_username
+        # print S_password
+        # print SOUNDCLOUD_CLIENT_ID
+        # print SOUNDCLOUD_CLIENT_SECRET_ID
+        #
+        # f = open('user1.tmp', 'w')
+        # f.write(username + "\n")
+        # f.write(G_username + "\n")
+        # f.write(G_password + "\n")
+        # f.write(S_username + "\n")
+        # f.write(S_password + "\n")
+        # f.write(SOUNDCLOUD_CLIENT_ID + "\n")
+        # f.write(SOUNDCLOUD_CLIENT_SECRET_ID + "\n")
 
         Deviceclient = Webclient()
         Deviceclient.login(G_username, G_password)

@@ -1,12 +1,11 @@
 from User import *
-from ClientHandler import *
 from Player import *
-
+# from ServiceManager import *
 
 class Hermes:
     def __init__(self, username):
         self.user = User(username)
-        self.client = ClientHandler(self.user)
+        # self.client = ClientHandler(self.user)
         self.player = Player()
 
     def intersect(self, res, inp):
@@ -99,15 +98,15 @@ class Hermes:
 
         # recent_Art, recent_Alb, recent_Tra = Print_Results(Art_res, Alb_res, Tra_res)
 
-        return [Art_res, Alb_res2, Tra_res]
+        # return [Art_res, Alb_res2, Tra_res]
 
     def sync(self):
         print "Syncing"
-        self.user.sync(self.client)
+        self.user.sync()
         print "Done"
 
     def syncStream(self):
-        self.user.sync_stream(self.client)
+        self.user.sync_stream()
         all_rows = self.user.library_get('streamid', ['artist', 'album', 'title', 'tracknum', 'art', 'location'], 'location', ['artist', 'album', 'tracknum'], 'S', False, 'stream')
         return all_rows
 

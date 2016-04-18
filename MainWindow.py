@@ -19,7 +19,7 @@ import requests
 requests.packages.urllib3.disable_warnings()
 urllib3.contrib.pyopenssl.inject_into_urllib3()
 
-form_class = uic.loadUiType("ui1.ui")[0]  # Load the UI
+form_class = uic.loadUiType("assets/ui/ui1.ui")[0]  # Load the UI
 
 
 class MyWindowClass(QtGui.QMainWindow, form_class):
@@ -343,8 +343,8 @@ class MyWindowClass(QtGui.QMainWindow, form_class):
         self.stack.setCurrentIndex(1)
 
 # Main script
-app = QtGui.QApplication(sys.argv)
-app.setStyleSheet('QMainWindow{background-color: darkgray;}')
-myWindow = MyWindowClass(None)
-myWindow.show()
-app.exec_()
+# app = QtGui.QApplication(sys.argv)
+# app.setStyleSheet('QMainWindow{background-color: darkgray;}')
+# myWindow = MyWindowClass(None)
+# myWindow.show()
+# app.exec_()

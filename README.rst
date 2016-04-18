@@ -19,6 +19,7 @@ Install Dependencies::
 	$ pip install eyeD3-pip
 	$ pip install pillow
 	$ pip install numpy
+	$ pip install enum
 
 Note: On Windows it is usually easier to download and install numpy from the installers (.exe) on sourceforge
 

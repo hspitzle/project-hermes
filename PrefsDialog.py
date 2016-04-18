@@ -3,7 +3,7 @@ from Theme import *
 from PyQt4 import QtCore, QtGui, uic
 from PyQt4.QtGui import *
 
-form_class = uic.loadUiType("prefs.ui")[0]                 # Load the UI
+form_class = uic.loadUiType("assets/ui/prefs.ui")[0]                 # Load the UI
 
 
 class PrefsDialog(QDialog, form_class):
@@ -40,12 +40,12 @@ class PrefsDialog(QDialog, form_class):
     def setThemeDark(self):
         print "Theme: dark"
         self.theme.cssTheme = CssTheme.DARK
-        self.setTheme('dark.css')
+        self.setTheme('assets/css_styles/dark.css')
 
     def setThemeLight(self):
         print "Theme: light"
         self.theme.cssTheme = CssTheme.LIGHT
-        self.setTheme('light.css')
+        self.setTheme('assets/css_styles/light.css')
 
     def setNewCustomTheme(self):
         self.setThemeCustom(False)

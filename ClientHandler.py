@@ -1,6 +1,6 @@
 import soundcloud
 from gmusicapi import Mobileclient
-# from gmusicapi import Webclient
+from gmusicapi import Webclient
 import urllib3.contrib.pyopenssl
 import requests
 
@@ -17,9 +17,17 @@ class ClientHandler:
 
         self.G_client = Mobileclient()
 
-        logged_in = self.G_client.login(user.G_username,user.G_password)
+        print user.G_username
+        print user.G_password
 
-        self.S_client = soundcloud.Client(client_id=user.SOUNDCLOUD_CLIENT_ID, client_secret=user.SOUNDCLOUD_CLIENT_SECRET_ID, username=user.S_username, password=user.S_password)
+        logged_in = self.G_client.login(user.G_username,user.G_password, Mobileclient.FROM_MAC_ADDRESS)
+
+        print logged_in
+
+        print "Google logged in"
+
+        # self.S_client = soundcloud.Client(client_id=user.SOUNDCLOUD_CLIENT_ID, client_secret=user.SOUNDCLOUD_CLIENT_SECRET_ID, username=user.S_username, password=user.S_password)
+
 
     def get_stream_URL(self, sid, location):
         if location == 'G':
