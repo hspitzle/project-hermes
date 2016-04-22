@@ -100,6 +100,15 @@ class Hermes:
 
         # return [Art_res, Alb_res2, Tra_res]
 
+    def get_watched(self):
+        return self.user.get_watched()
+
+    def add_watched(self, directory):
+        return self.user.add_watched(directory)
+
+    def remove_watched(self, directory):
+        self.user.remove_watched(directory)
+
     def sync(self):
         print "Syncing"
         self.user.sync()
@@ -111,7 +120,4 @@ class Hermes:
         return all_rows
 
     def quit(self):
-        self.user.cursor.execute('''DROP TABLE IF EXISTS stream''')
-        self.user.db.close()
-        # if self.player.Queue != 'stream':
-        #     self.player.Queue.save()
+        self.user.quit()

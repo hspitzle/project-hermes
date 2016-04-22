@@ -3,12 +3,12 @@ from Library import *
 from ClientHandler import *
 import soundcloud
 
-import eyeD3
+# import eyed3
 
 import sys
-import os
+# import os
 import sqlite3
-from os import path
+# from os import path
 import getpass
 import base64
 import pickle
@@ -27,7 +27,7 @@ class User:
         self.enc_key = "private_key"
 
         self.playlists = []
-        self.watched = []
+        # self.watched = []
 
         # if len(sys.argv) >= 2:
         #     try:
@@ -41,11 +41,11 @@ class User:
         # else:
         #     self.authenticate(self.get_filename())
 
-        data_dir = 'hermes-userdata'
-        if not path.exists(data_dir):
-            os.mkdir(data_dir)
+        self.data_dir = 'hermes-userdata'
+        if not path.exists(self.data_dir):
+            os.mkdir(self.data_dir)
 
-        self.userdata_path = path.join(data_dir, username)
+        self.userdata_path = path.join(self.data_dir, username)
         print self.userdata_path
         if not path.exists(self.userdata_path):
             os.mkdir(self.userdata_path)
@@ -57,15 +57,16 @@ class User:
         self.db = sqlite3.connect(self.db_path)
         self.cursor = self.db.cursor()
 
-        self.watched_file = path.join(self.userdata_path, self.profile_name + "_watched")
-
-        if not path.exists(self.watched_file):
-            open(self.watched_file, 'w').close()
-
-        if os.stat(self.watched_file).st_size > 0:
-            filer = open(self.watched_file, 'r')
-            self.watched = pickle.load(filer)
-            filer.close()
+        # >*
+        # self.watched_file = path.join(self.userdata_path, self.profile_name + "_watched")
+        #
+        # if not path.exists(self.watched_file):
+        #     open(self.watched_file, 'w').close()
+        #
+        # if os.stat(self.watched_file).st_size > 0:
+        #     filer = open(self.watched_file, 'r')
+        #     self.watched = pickle.load(filer)
+        #     filer.close()
 
         for filer in os.listdir(self.userdata_path):
             if filer.startswith("playlist_"):
@@ -74,6 +75,7 @@ class User:
                 self.playlists.append(playlist)
 
         self.client = ClientHandler(self)
+        self.library = Library(self.cursor, self)
 
     def get_filename(username):
         return path.join('hermes-userdata', username)
@@ -150,72 +152,10 @@ class User:
         f.close()
 
     def library_get(self, distinct, get_others, where_like, ordered_return, USI, single=False, db='tracks'):
-        query = 'SELECT DISTINCT(' + distinct + ')'
-        for item in get_others:
-            query += ', ' + item
-        query += ' FROM ' + db + ' WHERE ' + where_like + ' LIKE ? OR ' + where_like + ' LIKE ?'
-        if len(ordered_return) > 0:
-            query += ' ORDER BY '
-            for item in ordered_return:
-                query += item + ', '
-            query = query[:len(query) - 2]
-        self.cursor.execute(query, (USI + '%', '% ' + USI + '%',))
-        if single is False:
-            return self.cursor.fetchall()
-        else:
-            return self.cursor.fetchone()
+        return self.library.get(distinct, get_others, where_like, ordered_return, USI, single, db)
 
     def sync(self):
-        local_tracks = []
-        for path in self.watched:
-            filelist = []
-            for (dirpath, dirnames, filenames) in os.walk(path):
-                filelist.extend(dirpath + '/' + filename for filename in filenames)
-            local_tracks += filelist
-
-        for File in local_tracks:
-            if not (File.endswith('.mp3') or File.endswith('.wav')):
-                local_tracks.remove(File)
-
-        for track in local_tracks:
-            tag = eyeD3.Tag()
-            tag.link(track)
-            if len(tag.getArtist()) and len(tag.getAlbum()) and len(tag.getTitle()) > 0:
-                self.cursor.execute('''INSERT OR IGNORE INTO tracks VALUES(?, ?, ?, ?, ?, ?, ?, ?)''',
-                                    (iden, tag.getTitle(), tag.getAlbum(), tag.getArtist(), 'L', 'L_' + str(track), tag.track_num[0], ''))
-                iden += 1
-            else:
-                print "Could not resolve track metadata for: " + track
-
-
-        gmusic_tracks = self.client.G_client.get_all_songs()
-        self.cursor.execute('''CREATE TABLE IF NOT EXISTS tracks(id INTEGER PRIMARY KEY, title TEXT, album TEXT, artist TEXT, location TEXT, streamid TEXT UNIQUE, tracknum INTEGER, art TExT)''')
-        self.cursor.execute('''SELECT count(*) FROM tracks''')
-        iden = self.cursor.fetchone()[0]
-        for track in gmusic_tracks:
-            art = ''
-            try:
-                art = track['albumArtRef'][0]['url']
-            except KeyError:
-                art = ''
-            self.cursor.execute('''INSERT OR IGNORE INTO tracks VALUES(?, ?, ?, ?, ?, ?, ?, ?)''',
-                                (iden, track['title'], track['album'], track['artist'], 'G', 'G_' + str(track['id']), track['trackNumber'], art))
-            iden += 1
-
-        # Fav_Size = 0
-        # S_list = client.S_client.get('/me/favorites', limit=300)
-        # while Fav_Size != len(S_list):
-        #     Fav_Size = len(S_list)
-        #     S_list += client.S_client.get('/me/favorites', limit=300, offset=len(S_list))
-
-        # for track in S_list:
-        #     self.cursor.execute('''INSERT OR IGNORE INTO tracks VALUES(?, ?, ?, ?, ?, ?, ?, ?)''',
-        #                         (iden, track.title, "Unknown Album", track.user['username'], 'S', 'S_' + str(track.id), 0, track.artwork_url))
-        #     iden += 1
-
-
-
-        self.db.commit()
+        self.library.sync()
 
     def sync_stream(self):
         self.cursor.execute('''DROP TABLE IF EXISTS stream''')
@@ -255,20 +195,17 @@ class User:
 
         self.db.commit()
 
-    def add_watched(self, directory):
-        # already there
-        if directory in self.watched:
-            return False
+    def get_watched(self):
+        return self.library.get_watched()
 
-        self.watched.append(directory)
-        self.save_watched()
-        return True
+    def add_watched(self, directory):
+        return self.library.add_watched(directory)
 
     def remove_watched(self, directory):
-        self.watched.remove(directory)
-        self.save_watched()
+        self.library.remove_watched(directory)
 
-    def save_watched(self):
-        filer = open(self.watched_file, 'w')
-        pickle.dump(self.watched, filer)
-        filer.close()
+    def quit(self):
+        self.cursor.execute('''DROP TABLE IF EXISTS stream''')
+        self.db.close()
+        # if self.player.Queue != 'stream':
+        #     self.player.Queue.save()

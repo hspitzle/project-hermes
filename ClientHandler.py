@@ -4,10 +4,8 @@ from gmusicapi import Webclient
 import urllib3.contrib.pyopenssl
 import requests
 
-
 requests.packages.urllib3.disable_warnings()
 urllib3.contrib.pyopenssl.inject_into_urllib3()
-
 
 class ClientHandler:
 
@@ -21,13 +19,9 @@ class ClientHandler:
         print user.G_password
 
         logged_in = self.G_client.login(user.G_username,user.G_password, Mobileclient.FROM_MAC_ADDRESS)
-
-        print logged_in
-
-        print "Google logged in"
+        print "Google logged in:", logged_in
 
         # self.S_client = soundcloud.Client(client_id=user.SOUNDCLOUD_CLIENT_ID, client_secret=user.SOUNDCLOUD_CLIENT_SECRET_ID, username=user.S_username, password=user.S_password)
-
 
     def get_stream_URL(self, sid, location):
         if location == 'G':

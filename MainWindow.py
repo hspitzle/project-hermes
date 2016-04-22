@@ -80,7 +80,8 @@ class MyWindowClass(QtGui.QMainWindow, form_class):
         self.prefDialog = PrefsDialog(self.theme, self)
         self.refreshUI()
 
-        for path in self.hermes.user.watched:
+        watched_list = self.hermes.get_watched()
+        for path in watched_list:
             self.prefDialog.watchedList.addItem(path)
 
         self.likeButton.hide()

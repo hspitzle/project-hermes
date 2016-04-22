@@ -86,23 +86,21 @@ class PrefsDialog(QDialog, form_class):
         pass
 
     def addWatched(self):
-        dialog = QFileDialog(self, "Select a Directory to Watch", "./", "*.css")
-        dialog.setFileMode(QFileDialog.Directory)
-        dialog.exec_()
-
-        # dialog rejected
-        if dialog.result() != 1:
+        directory = QtGui.QFileDialog.getExistingDirectory(self, 'Select a Directory to Watch', './', QtGui.QFileDialog.ShowDirsOnly)
+        directory = str(directory)
+        if len(directory) == 0:
             return
-
-        directory = dialog.directory().absolutePath()
-        added = self.parent.hermes.user.add_watched(directory)
+        added = self.parent.hermes.add_watched(directory)
         if added:
             self.watchedList.addItem(directory)
 
     def removeWatched(self):
         selected = self.watchedList.currentRow()
+        print len(self.watchedList)
+        if not selected in xrange(0, len(self.watchedList)):
+            return
         directory = str(self.watchedList.item(selected).text())
-        self.parent.hermes.user.remove_watched(directory)
+        self.parent.hermes.remove_watched(directory)
         self.watchedList.takeItem(selected)
 
     def refreshUI(self):
