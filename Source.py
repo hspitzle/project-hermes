@@ -19,6 +19,35 @@ class GoogleMusic(Source):
     def __init__(self):
         Source.__init__(self, "google")
 
+        #TODO: set up google client and authenticate
+
+
+    def sync(self):
+        gmusic_tracks = self.client.G_client.get_all_songs()
+        for track in gmusic_tracks:
+            art = ''
+            try:
+                art = track['albumArtRef'][0]['url']
+            except KeyError:
+                art = ''
+            self.cursor.execute('''INSERT OR IGNORE INTO tracks VALUES(?, ?, ?, ?, ?, ?, ?, ?)''',
+                                (self.library.get_next_id(), track['title'], track['album'], track['artist'], 'G', 'G_' + str(track['id']), track['trackNumber'], art))
+
+class Soundcloud(Source):
+    def __init__(self):
+        Source.__inti__(self, "soundcloud")
+
+    def sync(self):
+        Fav_Size = 0
+        S_list = client.S_client.get('/me/favorites', limit=300)
+        while Fav_Size != len(S_list):
+            Fav_Size = len(S_list)
+            S_list += client.S_client.get('/me/favorites', limit=300, offset=len(S_list))
+
+        for track in S_list:
+            self.cursor.execute('''INSERT OR IGNORE INTO tracks VALUES(?, ?, ?, ?, ?, ?, ?, ?)''',
+                                (self.library.get_next_id(), track.title, "Unknown Album", track.user['username'], 'S', 'S_' + str(track.id), 0, track.artwork_url))
+
 class LocalMusic(Source):
     def __init__(self, library, user):
         Source.__init__(self, "local")
