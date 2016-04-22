@@ -5,6 +5,15 @@ from os import path
 
 import eyed3
 
+from enum import Enum
+
+
+class SourceType(Enum):
+    LOCAL = 0
+    GOOGLE = 1
+    SOUNDCLOUD = 2
+    SPOTIFY = 3
+
 class Source(object):
     def __init__(self, name):
         self._name = name
@@ -17,7 +26,7 @@ class Source(object):
 
 class GoogleMusic(Source):
     def __init__(self):
-        Source.__init__(self, "google")
+        Source.__init__(self, SourceType.GOOGLE)
 
         #TODO: set up google client and authenticate
 
@@ -35,7 +44,9 @@ class GoogleMusic(Source):
 
 class Soundcloud(Source):
     def __init__(self):
-        Source.__inti__(self, "soundcloud")
+        Source.__inti__(self, SourceType.SOUNDCLOUD)
+
+        #TODO: set up sc client and authenticate
 
     def sync(self):
         Fav_Size = 0
@@ -50,7 +61,7 @@ class Soundcloud(Source):
 
 class LocalMusic(Source):
     def __init__(self, library, user):
-        Source.__init__(self, "local")
+        Source.__init__(self, SourceType.LOCAL)
         self.user = user
         self.library = library
         self.watched = []
