@@ -1,5 +1,6 @@
 from Shelver import *
 
+import shutil
 import os
 from os import path
 from PIL import Image
@@ -17,6 +18,20 @@ class Theme(Shelver):
 
     def __init__(self, title, user):
         super(Theme, self).__init__(title, user)
+
+        # copy buttons to new location if theyre not already there
+        destDir = path.join("assets")
+        if not path.exists(destDir):
+            os.mkdir(destDir)
+        destDir = path.join("assets", "buttons")
+        if not path.exists(destDir):
+            os.mkdir(destDir)
+        srcDir = "stock_buttons"
+        for button in os.listdir(srcDir):
+            destPath = path.join(destDir,button)
+            if not path.exists(destPath):
+                shutil.copy2(path.join(srcDir,button), destPath)
+
         self.cssTheme_id = 0
         self.cssTheme = CssTheme.DARK
         self.customCssPath_id = 1
@@ -71,5 +86,3 @@ class Theme(Shelver):
 
         im = Image.fromarray(data)
         im.save(image)
-
-

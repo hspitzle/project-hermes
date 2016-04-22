@@ -326,7 +326,7 @@ class MyWindowClass(QtGui.QMainWindow, form_class):
             self.playpauseButton.setIcon(QtGui.QIcon(QtCore.QString("assets/buttons/pause_nofill.png")))
         else:
             self.playpauseButton.setIcon(QtGui.QIcon(QtCore.QString("assets/buttons/play_fill.png")))
-            image = QtGui.QPixmap(QtCore.QString('assets/buttons/record.png'))
+            image = QtGui.QPixmap(QtCore.QString("assets/buttons/record.png"))
             self.artView.setScaledContents(True)
             self.artView.setPixmap(image.scaled(75,75))
 
