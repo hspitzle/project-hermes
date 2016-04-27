@@ -1,6 +1,8 @@
 from gmusicapi import Webclient
 from Library import *
 from ClientHandler import *
+
+import Settings
 import soundcloud
 
 # import eyed3
@@ -15,8 +17,8 @@ import pickle
 
 
 class User:
-    def __init__(self, username):
-        self.profile_name = username
+    def __init__(self, hermes, username):
+        self.username = username
         self.G_username = ""
         self.G_password = ""
         self.S_username = ""
@@ -27,7 +29,6 @@ class User:
         self.enc_key = "private_key"
 
         self.playlists = []
-        # self.watched = []
 
         # if len(sys.argv) >= 2:
         #     try:
@@ -41,20 +42,12 @@ class User:
         # else:
         #     self.authenticate(self.get_filename())
 
-        self.data_dir = 'hermes-userdata'
-        if not path.exists(self.data_dir):
-            os.mkdir(self.data_dir)
+        self.userdata_path = Settings.pathman["user"]
+        print "User data path:", Settings.pathman["user"]
 
-        self.userdata_path = path.join(self.data_dir, username)
-        print self.userdata_path
-        if not path.exists(self.userdata_path):
-            os.mkdir(self.userdata_path)
+        self.login(Settings.pathman["profile"]) #TODO: replace with load profile call, init all authenticated services
 
-        profilePath = path.join(self.userdata_path, self.profile_name)
-        self.login(profilePath)
-
-        self.db_path = path.join(self.userdata_path, self.profile_name + '_db')
-        self.db = sqlite3.connect(self.db_path)
+        self.db = sqlite3.connect(Settings.pathman["library"])
         self.cursor = self.db.cursor()
 
         # >*
@@ -68,7 +61,7 @@ class User:
         #     self.watched = pickle.load(filer)
         #     filer.close()
 
-        for filer in os.listdir(self.userdata_path):
+        for filer in os.listdir(Settings.pathman["user"]): #> move to library
             if filer.startswith("playlist_"):
                 #print "Adding playlist " , file
                 playlist = Playlist(filer, self)
@@ -76,10 +69,6 @@ class User:
 
         self.client = ClientHandler(self)
         self.library = Library(self.cursor, self)
-
-    def get_filename(username):
-        return path.join('hermes-userdata', username)
-    get_filename = staticmethod(get_filename)
 
     def encode(key, clear):
         enc = []
@@ -99,6 +88,23 @@ class User:
             dec_c = chr((256 + ord(enc[i]) - ord(key_c)) % 256)
             dec.append(dec_c)
         return "".join(dec)
+
+    def add_account(self, src_type, username, password, extras = None):
+        src = Source()
+        if src_type is SourceType.LOCAL:
+            src = LocalMusic(self)
+        elif src_type is SourceType.GOOGLE:
+            src = GoogleMusic(self, username, password)
+        elif src_type is SourceType.SOUNDCLOUD:
+            client_id = extras["client_id"]
+            client_secret = extras["client_secret"]
+            src = Soundcloud(self, username, password, client_id, client_secret)
+        elif src is SourceType.SPOTIFY:
+            src = Spotify(self, username, password)
+        else:
+            raise ValueError("Unrecognized src_type value")
+
+        self.library.add_source(src)
 
     # def authenticate(self, USER_DATA_FILENAME):
     #     self.G_username = raw_input("Google Play Account Email: ")
@@ -194,6 +200,11 @@ class User:
                 break
 
         self.db.commit()
+
+    def create_playlist(self, playlist_name):
+        title = 'playlist_'+str(dialog.textValue())
+        playlist = Playlist(title, self.hermes.user)
+        self.playlists.append(playlist)
 
     def get_watched(self):
         return self.library.get_watched()

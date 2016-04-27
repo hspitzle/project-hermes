@@ -84,6 +84,7 @@ class LoginDialog(QDialog, form_class):
         userdata_path = User.get_filename(username)
         if not path.exists(userdata_path):
             os.mkdir(userdata_path)
+
         File = open(path.join(userdata_path, username), 'w+')
         File.write(User.encode("private_key", G_username) + '\n')
         File.write(User.encode("private_key", G_password) + '\n')

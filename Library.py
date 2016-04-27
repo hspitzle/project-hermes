@@ -1,24 +1,21 @@
 from Shelver import *
 from Source import *
 
+import Settings
+
 class Library:
     def __init__(self, cursor, user):
         self.cursor = cursor
         self.sources = []
         self.user = user
-        self.add_source(LocalMusic(self, user))
-        self.next_id = 0
-
-
-    def get_next_id(self):
-        self.next_id += 1;
-        return self.next_id-1
+        self.add_source(LocalMusic(user))
 
     def add_source(self, source):
         self.sources.append(source)
+        #> sync new source? or all sources?
 
     def get(self, distinct, get_others, where_like, ordered_return, USI, single=False, db='tracks'):
-        print "searching...#$%"
+        print "searching..."
         query = 'SELECT DISTINCT(' + distinct + ')'
         for item in get_others:
             query += ', ' + item
@@ -37,7 +34,7 @@ class Library:
     def sync(self):
         self.user.cursor.execute('''CREATE TABLE IF NOT EXISTS tracks(id INTEGER PRIMARY KEY, title TEXT, album TEXT, artist TEXT, location TEXT, streamid TEXT UNIQUE, tracknum INTEGER, art TExT)''')
         self.user.cursor.execute('''SELECT count(*) FROM tracks''')
-        self.next_id = self.user.cursor.fetchone()[0]
+        Settings.next_id = self.user.cursor.fetchone()[0]
 
         for src in self.sources:
             src.sync()

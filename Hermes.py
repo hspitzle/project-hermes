@@ -1,12 +1,27 @@
 from User import *
 from Player import *
 # from ServiceManager import *
+from os import path
+
+import Settings
 
 class Hermes:
     def __init__(self, username):
-        self.user = User(username)
+        self.setup_paths(username)
+        self.user = User(self, username)
         # self.client = ClientHandler(self.user)
         self.player = Player()
+
+
+    def setup_paths(self, username):
+        Settings.add_path_dir("data", "hermes-userdata")
+        Settings.add_path_dir("user", username, "data")
+
+        Settings.pathman["profile"] = path.join(Settings.pathman["user"], username)
+        Settings.pathman["library"] = path.join(Settings.pathman["user"], username+"_db")
+
+    def add_account(self, username, password, extras = None):
+        self.user.add_account(username, password, extras)
 
     def intersect(self, res, inp):
         if len(res) == 0:
@@ -118,6 +133,9 @@ class Hermes:
         self.user.sync_stream()
         all_rows = self.user.library_get('streamid', ['artist', 'album', 'title', 'tracknum', 'art', 'location'], 'location', ['artist', 'album', 'tracknum'], 'S', False, 'stream')
         return all_rows
+
+    def create_playlist(self, playlist_name):
+        self.user.create_playlist(playlist_name)
 
     def quit(self):
         self.user.quit()

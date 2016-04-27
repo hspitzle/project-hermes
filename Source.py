@@ -1,10 +1,10 @@
 from Library import *
+import Settings
+
 import pickle
 import os
 from os import path
-
 import eyed3
-
 from enum import Enum
 
 
@@ -25,7 +25,7 @@ class Source(object):
         pass
 
 class GoogleMusic(Source):
-    def __init__(self):
+    def __init__(self, username, password):
         Source.__init__(self, SourceType.GOOGLE)
 
         #TODO: set up google client and authenticate
@@ -40,10 +40,10 @@ class GoogleMusic(Source):
             except KeyError:
                 art = ''
             self.cursor.execute('''INSERT OR IGNORE INTO tracks VALUES(?, ?, ?, ?, ?, ?, ?, ?)''',
-                                (self.library.get_next_id(), track['title'], track['album'], track['artist'], 'G', 'G_' + str(track['id']), track['trackNumber'], art))
+                                (Settings.get_next_id(), track['title'], track['album'], track['artist'], 'G', 'G_' + str(track['id']), track['trackNumber'], art))
 
 class Soundcloud(Source):
-    def __init__(self):
+    def __init__(self, username, password, client_id, client_secret):
         Source.__inti__(self, SourceType.SOUNDCLOUD)
 
         #TODO: set up sc client and authenticate
@@ -57,18 +57,26 @@ class Soundcloud(Source):
 
         for track in S_list:
             self.cursor.execute('''INSERT OR IGNORE INTO tracks VALUES(?, ?, ?, ?, ?, ?, ?, ?)''',
-                                (self.library.get_next_id(), track.title, "Unknown Album", track.user['username'], 'S', 'S_' + str(track.id), 0, track.artwork_url))
+                                (Settings.get_next_id(), track.title, "Unknown Album", track.user['username'], 'S', 'S_' + str(track.id), 0, track.artwork_url))
+
+class Spotify(Source):
+    def __init__(self, username, password):
+        Source.__inti__(self, SourceType.SPOTIFY)
+
+        #TODO: set up google client and authenticate
+
+    def sync(self):
+        pass #> implement
 
 class LocalMusic(Source):
-    def __init__(self, library, user):
+    def __init__(self, user):
         Source.__init__(self, SourceType.LOCAL)
         self.user = user
-        self.library = library
         self.watched = []
-        self.watched_file = path.join(user.userdata_path, user.profile_name + "_watched")
+        self.watched_file = Settings.pathman["profile"] + "_watched"
+        Settings.add_path_file("watched", self.watched_file)
 
-        if not path.exists(self.watched_file):
-            open(self.watched_file, 'w').close()
+        print "Watched file:", self.watched_file
 
         if os.stat(self.watched_file).st_size > 0:
             filer = open(self.watched_file, 'r')
@@ -114,6 +122,6 @@ class LocalMusic(Source):
 
             if len(tag.artist) and len(tag.album) and len(tag.title) > 0:
                 self.user.cursor.execute('''INSERT OR IGNORE INTO tracks VALUES(?, ?, ?, ?, ?, ?, ?, ?)''',
-                                (self.library.get_next_id(), tag.title, tag.album, tag.artist, 'L', 'L_' + str(track), tag.track_num[0], ''))
+                                (Settings.get_next_id(), tag.title, tag.album, tag.artist, 'L', 'L_' + str(track), tag.track_num[0], ''))
             else:
                 print "Could not resolve track metadata for: " + track
