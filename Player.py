@@ -8,6 +8,7 @@ class Player:
         self.events = self.vlc.event_manager()
 
     def play_track(self, url):
+        print url
         self.vlc.set_mrl(url)
         self.play()
 

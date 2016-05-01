@@ -9,11 +9,11 @@ import soundcloud
 
 import sys
 # import os
-import sqlite3
 # from os import path
 import getpass
-import base64
+
 import pickle
+import json
 
 
 class User:
@@ -45,10 +45,11 @@ class User:
         self.userdata_path = Settings.pathman["user"]
         print "User data path:", Settings.pathman["user"]
 
-        self.login(Settings.pathman["profile"]) #TODO: replace with load profile call, init all authenticated services
+        self.library = Library(self)
 
-        self.db = sqlite3.connect(Settings.pathman["library"])
-        self.cursor = self.db.cursor()
+        self.load() #TODO: replace with load profile call, init all authenticated services
+
+
 
         # >*
         # self.watched_file = path.join(self.userdata_path, self.profile_name + "_watched")
@@ -67,40 +68,21 @@ class User:
                 playlist = Playlist(filer, self)
                 self.playlists.append(playlist)
 
-        self.client = ClientHandler(self)
-        self.library = Library(self.cursor, self)
+        self.client = ClientHandler(self) #>*
 
-    def encode(key, clear):
-        enc = []
-        for i in range(len(clear)):
-            key_c = key[i % len(key)]
-            enc_c = chr((ord(clear[i]) + ord(key_c)) % 256)
-            enc.append(enc_c)
-        return base64.urlsafe_b64encode("".join(enc))
-
-    encode = staticmethod(encode)
-
-    def decode(self, key, enc):
-        dec = []
-        enc = base64.urlsafe_b64decode(enc)
-        for i in range(len(enc)):
-            key_c = key[i % len(key)]
-            dec_c = chr((256 + ord(enc[i]) - ord(key_c)) % 256)
-            dec.append(dec_c)
-        return "".join(dec)
 
     def add_account(self, src_type, username, password, extras = None):
-        src = Source()
+        src = Source(self.library, "@NA")
         if src_type is SourceType.LOCAL:
-            src = LocalMusic(self)
+            src = LocalMusic(self.library)
         elif src_type is SourceType.GOOGLE:
-            src = GoogleMusic(self, username, password)
+            src = GoogleMusic(self.library, username, password)
         elif src_type is SourceType.SOUNDCLOUD:
             client_id = extras["client_id"]
             client_secret = extras["client_secret"]
-            src = Soundcloud(self, username, password, client_id, client_secret)
+            src = Soundcloud(self.library, username, password, client_id, client_secret)
         elif src is SourceType.SPOTIFY:
-            src = Spotify(self, username, password)
+            src = Spotify(self.library, username, password)
         else:
             raise ValueError("Unrecognized src_type value")
 
@@ -137,7 +119,8 @@ class User:
     #     File.write(self.SOUNDCLOUD_CLIENT_SECRET_ID + '\n')
     #     File.close()
 
-    def login(self, USER_DATA_FILENAME):
+    def load(self):
+        USER_DATA_FILENAME = Settings.pathman["profile"]
         # File = open(USER_DATA_FILENAME, 'r')
         # self.G_username = self.decode(self.enc_key, File.readline().rstrip('\n'))
         # self.G_password = self.decode(self.enc_key, File.readline().rstrip('\n'))
@@ -157,6 +140,83 @@ class User:
         self.SOUNDCLOUD_CLIENT_SECRET_ID = f.readline().rstrip('\n')
         f.close()
 
+        cred = []
+
+        account = {}
+        account["type"] = SourceType.GOOGLE
+        account["user"] = self.G_username
+        account["pass"] = self.G_password
+
+        cred.append(account)
+
+        account = {}
+        account["type"] = SourceType.SOUNDCLOUD
+        account["user"] = self.S_username
+        account["pass"] = self.S_password
+        account["extras"] = {}
+        account["extras"]["sc_client_id"] = self.SOUNDCLOUD_CLIENT_ID
+        account["extras"]["sc_secret_id"] = self.SOUNDCLOUD_CLIENT_SECRET_ID
+
+        cred.append(account)
+
+        cred = str(cred).replace("'", "\"")
+        enc_cred = Settings.encode(self.enc_key, cred)
+        print cred
+        print enc_cred
+        print Settings.decode(self.enc_key, enc_cred)
+        print Settings.pathman["profile"]
+
+        j = json.loads(Settings.decode(self.enc_key, enc_cred))
+        print j
+        for item in j:
+            print item
+        # print j["g_user"]
+        # print j["g_pass"]
+
+
+        filer = open(Settings.pathman["profile"], 'w')
+        pickle.dump(enc_cred, filer)
+        filer.close()
+
+        self.add_account(SourceType.GOOGLE, self.G_username, self.G_password)
+
+        self.load_credentials()
+        self.add_credentials(account)
+
+        self.load_credentials()
+
+    def load_credentials(self):
+        print "Loading credentials..."
+        filer = open(Settings.pathman["profile"], 'r')
+        enc_cred = pickle.load(filer)
+        filer.close()
+
+        j = json.loads(Settings.decode(self.enc_key, enc_cred))
+        print j
+        for item in j:
+            print item
+
+        print json.dumps(j)
+
+        return j
+
+    def add_credentials(self, jitem):
+        j = self.load_credentials()
+        src_type = jitem["type"]
+        print src_type
+
+        for item in j:
+            if item["type"] is src_type:
+                print "credentials already stored"
+                return
+
+        j.append(jitem)
+
+        filer = open(Settings.pathman["profile"], 'w')
+        enc_cred = Settings.encode(self.enc_key, json.dumps(j))
+        pickle.dump(enc_cred, filer)
+        filer.close()
+
     def library_get(self, distinct, get_others, where_like, ordered_return, USI, single=False, db='tracks'):
         return self.library.get(distinct, get_others, where_like, ordered_return, USI, single, db)
 
@@ -164,46 +224,14 @@ class User:
         self.library.sync()
 
     def sync_stream(self):
-        self.cursor.execute('''DROP TABLE IF EXISTS stream''')
-        self.db.commit()
+        self.library.sync_stream()
 
-        tracks = self.client.S_client.get('/me/activities/tracks/affiliated', limit=200)
-
-        self.cursor.execute('''CREATE TABLE IF NOT EXISTS stream(id INTEGER PRIMARY KEY, title TEXT, album TEXT,artist TEXT, location TEXT, streamid TEXT, tracknum INTEGER, art TEXT)''')
-
-        iden = 0
-        duplifier = []
-        for track in tracks.obj['collection']:
-            if track['origin']['id'] in duplifier:
-                continue
-            if track['origin']['kind'] == 'playlist':
-
-                Playtracks = self.client.S_client.get('/playlists/99297471/tracks')
-                for play in Playtracks:
-                    if play.id in duplifier:
-                        continue
-                    self.cursor.execute('''INSERT OR IGNORE INTO stream VALUES(?, ?, ?, ?, ?, ?, ?, ?)''',
-                                        (iden, play.title, "Unknown Album", play.user['username'], 'S', 'S_' + str(play.id), 0, play.artwork_url))
-                    self.db.commit()
-
-                    duplifier.append(play.id)
-                    duplifier.append(track['origin']['id'])
-                    iden += 1
-            else:
-                self.cursor.execute('''INSERT OR IGNORE INTO stream VALUES(?, ?, ?, ?, ?, ?, ?, ?)''',
-                                    (iden, track['origin']['title'], "Unknown Album", track['origin']['user']['username'], 's', 's_' + str(track['origin']['id']), 0, track['origin']['artwork_url']))
-                self.db.commit()
-
-                duplifier.append(track['origin']['id'])
-                iden += 1
-            if iden == 50:
-                break
-
-        self.db.commit()
+    def get_stream_URL(self, location, song_id):
+        return self.library.get_stream_URL(location, song_id)
 
     def create_playlist(self, playlist_name):
-        title = 'playlist_'+str(dialog.textValue())
-        playlist = Playlist(title, self.hermes.user)
+        title = 'playlist_' + playlist_name
+        playlist = Playlist(title, self)
         self.playlists.append(playlist)
 
     def get_watched(self):
@@ -216,7 +244,6 @@ class User:
         self.library.remove_watched(directory)
 
     def quit(self):
-        self.cursor.execute('''DROP TABLE IF EXISTS stream''')
-        self.db.close()
+        self.library.close()
         # if self.player.Queue != 'stream':
         #     self.player.Queue.save()

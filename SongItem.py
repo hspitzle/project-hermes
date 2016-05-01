@@ -20,7 +20,7 @@ class SearchSongItem(QtGui.QListWidgetItem):
         self.title = str(other[3].encode("utf-8"))
         self.tracknum = other[4]
         self.art = other[5].encode("utf-8")
-        self.location = str(other[6].encode("utf-8"))
+        self.location = other[6]
         self.setText(self.title + "\non: " + self.album + "\nby: " + self.artist)
 
     @classmethod
@@ -50,7 +50,7 @@ class SongItem(QtGui.QListWidgetItem):
             data = urllib3.PoolManager().request("GET", str(other[5].encode("utf-8")))
             self.art = QtGui.QPixmap()
             self.art.loadFromData(data.data)
-        self.location = str(other[6].encode("utf-8"))
+        self.location = other[6] #>& rename to self.source
         self.setText(self.title + "\non: " + self.album + "\nby: " + self.artist)
 
     @classmethod

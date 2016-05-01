@@ -7,6 +7,8 @@ from os import path
 import eyed3
 from enum import Enum
 
+from gmusicapi import Mobileclient
+
 
 class SourceType(Enum):
     LOCAL = 0
@@ -15,53 +17,77 @@ class SourceType(Enum):
     SPOTIFY = 3
 
 class Source(object):
-    def __init__(self, name):
-        self._name = name
+    def __init__(self, library, s_type):
+        self.library = library
+        self._source = s_type
 
     def get_source(self):
-        return self._name
+        return self._source
+
+    def get_stream_URL(self, song_id):
+        pass
 
     def sync(self):
         pass
 
 class GoogleMusic(Source):
-    def __init__(self, username, password):
-        Source.__init__(self, SourceType.GOOGLE)
+    def __init__(self, library, username, password):
+        Source.__init__(self, library, SourceType.GOOGLE)
+        self.GOOGLE_DEVICE_ID = None
 
-        #TODO: set up google client and authenticate
+        print self.GOOGLE_DEVICE_ID
+        print username
+        print password
 
+        self.client = Mobileclient()
+        logged_in = self.client.login(username, password, Mobileclient.FROM_MAC_ADDRESS)
+        print "Google logged in:", logged_in
+
+        DList = self.client.get_registered_devices()
+        self.GOOGLE_DEVICE_ID = DList[0]["id"]
+        if self.GOOGLE_DEVICE_ID[:2] == '0x':
+            self.GOOGLE_DEVICE_ID = self.GOOGLE_DEVICE_ID[2:]
+
+    def get_stream_URL(self, song_id):
+        return self.client.get_stream_url(song_id, self.GOOGLE_DEVICE_ID)
 
     def sync(self):
-        gmusic_tracks = self.client.G_client.get_all_songs()
+        gmusic_tracks = self.client.get_all_songs()
         for track in gmusic_tracks:
             art = ''
             try:
                 art = track['albumArtRef'][0]['url']
             except KeyError:
                 art = ''
-            self.cursor.execute('''INSERT OR IGNORE INTO tracks VALUES(?, ?, ?, ?, ?, ?, ?, ?)''',
-                                (Settings.get_next_id(), track['title'], track['album'], track['artist'], 'G', 'G_' + str(track['id']), track['trackNumber'], art))
+            self.library.insert_track(track['title'], track['album'], track['artist'], self._source, str(track['id']), track['trackNumber'], art)
 
 class Soundcloud(Source):
-    def __init__(self, username, password, client_id, client_secret):
-        Source.__inti__(self, SourceType.SOUNDCLOUD)
+    def __init__(self, library, username, password, client_id, client_secret):
+        Source.__inti__(self, library, SourceType.SOUNDCLOUD)
 
         #TODO: set up sc client and authenticate
 
+        self.SOUNDCLOUD_CLIENT_ID = "" #>& init
+        self.client = None #>& init
+
+    def get_stream_URL(self, song_id):
+        if self.client is None:
+            return
+        return self.client.get('/tracks/' + str(song_id)).stream_url + "?client_id=" + self.SOUNDCLOUD_CLIENT_ID
+
     def sync(self):
         Fav_Size = 0
-        S_list = client.S_client.get('/me/favorites', limit=300)
+        S_list = self.client.get('/me/favorites', limit=300)
         while Fav_Size != len(S_list):
             Fav_Size = len(S_list)
             S_list += client.S_client.get('/me/favorites', limit=300, offset=len(S_list))
 
         for track in S_list:
-            self.cursor.execute('''INSERT OR IGNORE INTO tracks VALUES(?, ?, ?, ?, ?, ?, ?, ?)''',
-                                (Settings.get_next_id(), track.title, "Unknown Album", track.user['username'], 'S', 'S_' + str(track.id), 0, track.artwork_url))
+            self.library.insert_track(track.title, "Unknown Album", track.user['username'], self._source, str(track.id), 0, track.artwork_url)
 
 class Spotify(Source):
-    def __init__(self, username, password):
-        Source.__inti__(self, SourceType.SPOTIFY)
+    def __init__(self, library, username, password):
+        Source.__inti__(self, library, SourceType.SPOTIFY)
 
         #TODO: set up google client and authenticate
 
@@ -69,9 +95,8 @@ class Spotify(Source):
         pass #> implement
 
 class LocalMusic(Source):
-    def __init__(self, user):
-        Source.__init__(self, SourceType.LOCAL)
-        self.user = user
+    def __init__(self, library):
+        Source.__init__(self, library, SourceType.LOCAL)
         self.watched = []
         self.watched_file = Settings.pathman["profile"] + "_watched"
         Settings.add_path_file("watched", self.watched_file)
@@ -82,6 +107,9 @@ class LocalMusic(Source):
             filer = open(self.watched_file, 'r')
             self.watched = pickle.load(filer)
             filer.close()
+
+    def get_stream_URL(self, song_id):
+        return song_id
 
     def get_watched(self):
         return self.watched
@@ -121,7 +149,6 @@ class LocalMusic(Source):
             tag = afile.tag
 
             if len(tag.artist) and len(tag.album) and len(tag.title) > 0:
-                self.user.cursor.execute('''INSERT OR IGNORE INTO tracks VALUES(?, ?, ?, ?, ?, ?, ?, ?)''',
-                                (Settings.get_next_id(), tag.title, tag.album, tag.artist, 'L', 'L_' + str(track), tag.track_num[0], ''))
+                self.library.insert_track(tag.title, tag.album, tag.artist, self._source, str(track), tag.track_num[0], '')
             else:
                 print "Could not resolve track metadata for: " + track

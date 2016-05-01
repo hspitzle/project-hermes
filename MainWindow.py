@@ -219,7 +219,8 @@ class MyWindowClass(QtGui.QMainWindow, form_class):
         self.artView.setPixmap(self.nowPlaying.currentItem().art.scaled(75, 75))
 
     def playTrack(self, track):
-        self.hermes.player.play_track(self.hermes.client.get_stream_URL(track.id, track.id[0]))
+        stream_url = self.hermes.get_stream_URL(track.location, track.id)
+        self.hermes.player.play_track(stream_url)
 
         self.getArt.emit()
 

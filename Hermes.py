@@ -12,6 +12,8 @@ class Hermes:
         # self.client = ClientHandler(self.user)
         self.player = Player()
 
+    # def __del__(self):
+    #     print "**Hermes dtor"
 
     def setup_paths(self, username):
         Settings.add_path_dir("data", "hermes-userdata")
@@ -114,6 +116,9 @@ class Hermes:
         # recent_Art, recent_Alb, recent_Tra = Print_Results(Art_res, Alb_res, Tra_res)
 
         # return [Art_res, Alb_res2, Tra_res]
+
+    def get_stream_URL(self, location, song_id):
+        return self.user.get_stream_URL(location, song_id)
 
     def get_watched(self):
         return self.user.get_watched()

@@ -85,15 +85,15 @@ class LoginDialog(QDialog, form_class):
         if not path.exists(userdata_path):
             os.mkdir(userdata_path)
 
-        File = open(path.join(userdata_path, username), 'w+')
-        File.write(User.encode("private_key", G_username) + '\n')
-        File.write(User.encode("private_key", G_password) + '\n')
-        File.write(User.encode("private_key", S_username) + '\n')
-        File.write(User.encode("private_key", S_password) + '\n')
-        File.write(GOOGLE_DEVICE_ID + '\n')
-        File.write(SOUNDCLOUD_CLIENT_ID + '\n')
-        File.write(SOUNDCLOUD_CLIENT_SECRET_ID + '\n')
-        File.close()
+        # File = open(path.join(userdata_path, username), 'w+')
+        # File.write(User.encode("private_key", G_username) + '\n')
+        # File.write(User.encode("private_key", G_password) + '\n')
+        # File.write(User.encode("private_key", S_username) + '\n')
+        # File.write(User.encode("private_key", S_password) + '\n')
+        # File.write(GOOGLE_DEVICE_ID + '\n')
+        # File.write(SOUNDCLOUD_CLIENT_ID + '\n')
+        # File.write(SOUNDCLOUD_CLIENT_SECRET_ID + '\n')
+        # File.close()
         self.login(username)
 
     def login(self, username):

@@ -3,6 +3,8 @@ __author__ = 'spitz'
 import shelve
 from os import path
 
+import Settings
+
 
 class Shelver(object):
     def __init__(self, title, user):
@@ -11,7 +13,7 @@ class Shelver(object):
         self.items = []
 
     def get_shelve(self):
-        return path.join(self.user.userdata_path, self.title)
+        return path.join(Settings.pathman["user"], self.title)
 
     def save(self):
         shelf = shelve.open(self.get_shelve(), 'c')
@@ -25,4 +27,3 @@ class Shelver(object):
         shelf = shelve.open(self.get_shelve(), 'r')
         self.items = shelf[self.title]
         shelf.close()
-
