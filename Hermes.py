@@ -9,7 +9,6 @@ class Hermes:
     def __init__(self, username):
         self.setup_paths(username)
         self.user = User(self, username)
-        # self.client = ClientHandler(self.user)
         self.player = Player()
 
     # def __del__(self):
@@ -19,11 +18,12 @@ class Hermes:
         Settings.add_path_dir("data", "hermes-userdata")
         Settings.add_path_dir("user", username, "data")
 
-        Settings.pathman["profile"] = path.join(Settings.pathman["user"], username)
-        Settings.pathman["library"] = path.join(Settings.pathman["user"], username+"_db")
+        Settings.add_path_file("profile", username, "user")
+        Settings.add_path_file("library", username+"_db", "user")
 
-    def add_account(self, username, password, extras = None):
-        self.user.add_account(username, password, extras)
+    def add_account(self, j_item):
+        self.user.add_account(j_item)
+        self.user.add_credentials(j_item)
 
     def intersect(self, res, inp):
         if len(res) == 0:

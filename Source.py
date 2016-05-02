@@ -8,6 +8,12 @@ import eyed3
 from enum import Enum
 
 from gmusicapi import Mobileclient
+import soundcloud
+import urllib3.contrib.pyopenssl
+import requests
+
+requests.packages.urllib3.disable_warnings()
+urllib3.contrib.pyopenssl.inject_into_urllib3()
 
 
 class SourceType(Enum):
@@ -35,7 +41,6 @@ class GoogleMusic(Source):
         Source.__init__(self, library, SourceType.GOOGLE)
         self.GOOGLE_DEVICE_ID = None
 
-        print self.GOOGLE_DEVICE_ID
         print username
         print password
 
@@ -47,6 +52,11 @@ class GoogleMusic(Source):
         self.GOOGLE_DEVICE_ID = DList[0]["id"]
         if self.GOOGLE_DEVICE_ID[:2] == '0x':
             self.GOOGLE_DEVICE_ID = self.GOOGLE_DEVICE_ID[2:]
+
+        print self.GOOGLE_DEVICE_ID
+
+        #>testing
+        # self.get_stream_URL("47b9d52c-9d66-3ff2-94d4-3ae55c0d2acc")
 
     def get_stream_URL(self, song_id):
         return self.client.get_stream_url(song_id, self.GOOGLE_DEVICE_ID)
@@ -63,9 +73,10 @@ class GoogleMusic(Source):
 
 class Soundcloud(Source):
     def __init__(self, library, username, password, client_id, client_secret):
-        Source.__inti__(self, library, SourceType.SOUNDCLOUD)
+        Source.__init__(self, library, SourceType.SOUNDCLOUD)
 
         #TODO: set up sc client and authenticate
+        # self.client = soundcloud.Client(client_id=user.SOUNDCLOUD_CLIENT_ID, client_secret=user.SOUNDCLOUD_CLIENT_SECRET_ID, username=user.S_username, password=user.S_password)
 
         self.SOUNDCLOUD_CLIENT_ID = "" #>& init
         self.client = None #>& init

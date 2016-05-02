@@ -1,4 +1,5 @@
 from Theme import *
+from Source import *
 
 from PyQt4 import QtCore, QtGui, uic
 from PyQt4.QtGui import *
@@ -26,6 +27,13 @@ class PrefsDialog(QDialog, form_class):
             self.setThemeCustom(True)
             self.customTheme.toggle()
 
+        self.src_google = "Google Music"
+        self.src_soundcloud = "Soundcloud"
+        self.src_spotify = "Spotify"
+        self.srcComboBox.addItem(self.src_google)
+        self.srcComboBox.addItem(self.src_soundcloud)
+        self.srcComboBox.addItem(self.src_spotify)
+
         self.load()
 
     def connectActions(self):
@@ -36,6 +44,36 @@ class PrefsDialog(QDialog, form_class):
         self.darkTheme.clicked.connect(self.setThemeDark)
         self.lightTheme.clicked.connect(self.setThemeLight)
         self.customTheme.clicked.connect(self.setNewCustomTheme)
+        self.addButton.clicked.connect(self.addAccount)
+
+    def addAccount(self):
+        username = str(self.usernameEdit.text())
+        password = str(self.passwordEdit.text())
+
+        account = {}
+        account["user"] = username
+        account["pass"] = password
+
+        src_type = str(self.srcComboBox.currentText())
+        print src_type, self.src_google
+        print len(src_type), len(self.src_google)
+        if src_type == self.src_google:
+            src_type = SourceType.GOOGLE
+        elif src_type == self.src_soundcloud:
+            src_type = SourceType.SOUNDCLOUD
+            SOUNDCLOUD_CLIENT_ID = str(self.s_clientEdit.text())
+            SOUNDCLOUD_CLIENT_SECRET_ID = str(self.s_secretEdit.text())
+            account["extras"] = {}
+            account["extras"]["client_id"] = SOUNDCLOUD_CLIENT_ID
+            account["extras"]["secret_id"] = SOUNDCLOUD_CLIENT_SECRET_ID
+        elif src_type == self.src_spotify:
+            src_type = self.SPOTIFY
+        else:
+            raise ValueError("Unknown account type")
+
+        account["type"] = src_type
+        self.parent.hermes.add_account(account)
+
 
     def setThemeDark(self):
         print "Theme: dark"

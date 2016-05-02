@@ -23,7 +23,9 @@ class Library:
 
     def add_source(self, source):
         self.sources.append(source)
-        #> sync new source? or all sources?
+        for src in self.sources:
+            print type(src)
+        #>? sync new source? or all sources?
 
     def get_source(self, src_type):
         return next((src for src in self.sources if (src.get_source() is src_type)), None)

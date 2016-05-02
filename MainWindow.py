@@ -10,7 +10,6 @@ from PyQt4 import QtCore, QtGui, uic
 from Hermes import *
 from SongItem import *
 from PrefsDialog import *
-from LoginDialog import *
 import Settings
 
 import urllib3.contrib.pyopenssl
@@ -33,15 +32,9 @@ class MyWindowClass(QtGui.QMainWindow, form_class):
 
         self.username = ''
         if len(sys.argv) < 2:
-            login = LoginDialog(self)
-
-            login.exec_()
-
-            if login.result() != 1:
-                print "Error: no username found"
-                print "Usage: python MainWindow.py <username>"
-                exit()
-
+            print "Error: no username found"
+            print "Usage: python Controller.py <username>"
+            exit()
         else:
             self.username = str(sys.argv[1])
 
