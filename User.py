@@ -77,23 +77,22 @@ class User:
 
         j = json.loads(Settings.decode(self.enc_key, enc_cred))
         print j
-
         return j
 
     def add_credentials(self, j_item):
-        j = self.load_credentials()
+        j_cred = self.load_credentials()
         src_type = j_item["type"]
         print "adding source type:", src_type
 
-        for item in j:
+        for item in j_cred:
             if item["type"] is src_type:
                 print "credentials already stored"
                 return
 
-        j.append(j_item)
+        j_cred.append(j_item)
 
         filer = open(Settings.pathman["profile"], 'w')
-        enc_cred = Settings.encode(self.enc_key, json.dumps(j))
+        enc_cred = Settings.encode(self.enc_key, json.dumps(j_cred))
         pickle.dump(enc_cred, filer)
         filer.close()
 

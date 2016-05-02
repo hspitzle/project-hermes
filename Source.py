@@ -72,14 +72,13 @@ class GoogleMusic(Source):
             self.library.insert_track(track['title'], track['album'], track['artist'], self._source, str(track['id']), track['trackNumber'], art)
 
 class Soundcloud(Source):
-    def __init__(self, library, username, password, client_id, client_secret):
+    def __init__(self, library, username, password, client_id, secret_id):
         Source.__init__(self, library, SourceType.SOUNDCLOUD)
 
-        #TODO: set up sc client and authenticate
-        # self.client = soundcloud.Client(client_id=user.SOUNDCLOUD_CLIENT_ID, client_secret=user.SOUNDCLOUD_CLIENT_SECRET_ID, username=user.S_username, password=user.S_password)
+        self.SOUNDCLOUD_CLIENT_ID = client_id
 
-        self.SOUNDCLOUD_CLIENT_ID = "" #>& init
-        self.client = None #>& init
+        #TODO: set up sc client and authenticate
+        # self.client = soundcloud.Client(client_id=client_id, client_secret=secret_id, username=username, password=password)
 
     def get_stream_URL(self, song_id):
         if self.client is None:
