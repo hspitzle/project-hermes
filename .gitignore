@@ -1,4 +1,5 @@
 *.tmp
 *.pyc
 hermes-userdata/*
-assets/buttons/*
+assets/buttons/*i
+venv/*
